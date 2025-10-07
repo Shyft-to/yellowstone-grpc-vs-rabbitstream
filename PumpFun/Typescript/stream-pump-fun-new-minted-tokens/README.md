@@ -15,7 +15,7 @@ This project provides a Node.js service to monitor and parse newly minted tokens
 ## Installation
 ```sh
 git clone https://github.com/Shyft-to/yellowstone-grpc-vs-rabbitstream.git
-cd PumpFun/Typescript/stream-pump-fun-new-minted-tokens
+cd yellowstone-grpc-vs-rabbitstream/PumpFun/Typescript/stream-pump-fun-new-minted-tokens
 npm install
 ```
 
