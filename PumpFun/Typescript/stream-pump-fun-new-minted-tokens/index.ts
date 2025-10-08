@@ -52,7 +52,7 @@ const req = {
   blocksMeta: {},
   accountsDataSlice: [] as SubscribeRequestAccountsDataSlice[],
   ping: undefined as SubscribeRequestPing | undefined,
-  commitment: CommitmentLevel.CONFIRMED,
+  commitment: CommitmentLevel.PROCESSED,
 };
 
 const yellowstoneClient = new Client(GRPC_URL, process.env.X_TOKEN, undefined);
