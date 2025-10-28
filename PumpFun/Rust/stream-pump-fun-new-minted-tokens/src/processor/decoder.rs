@@ -37,7 +37,12 @@ impl TransactionProcessor{
         instruction: &TransactionInstructionWithParent,
     ) -> anyhow::Result<Option<DecodedInstruction>> {
         if instruction.instruction.program_id == self.pumpfun_program_id {
-            self.decode_pumpfun_instruction(instruction)
+            let decoded_instruction: Result<Option<DecodedInstruction>, anyhow::Error> = self.decode_pumpfun_instruction(instruction);
+            if decoded_instruction.is_err() {
+                Ok(None)
+            } else {
+                decoded_instruction
+            }
         } else if instruction.instruction.program_id == self.token_program_id {
             self.decode_token_instruction(instruction)
         } else {
