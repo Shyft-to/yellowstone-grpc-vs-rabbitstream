@@ -62,7 +62,7 @@ pub fn pump_amm_formatter(
     tx.message.instructions
         .iter()
         .chain(meta.inner_instructions.iter())
-        .find(|instr| instr.name == "create")?;
+        .find(|instr| instr.name == "create" || instr.name == "createV2")?;
 
     Some(ParsedConfirmedTransactionWithStatusMeta {
         slot: original.slot,

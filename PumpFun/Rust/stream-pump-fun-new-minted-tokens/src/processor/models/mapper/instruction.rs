@@ -49,7 +49,7 @@ impl<'info> InstructionAccountMapper<'info> for Idl {
         let instruction = self
             .instructions
             .iter()
-            .find(|ix| ix.name.to_lowercase() == instruction_name.to_lowercase())
+            .find(|ix| ix.name.replace('_', "").to_lowercase() == instruction_name.replace('_', "").to_lowercase())
             .ok_or(ProgramError::InvalidArgument)?;
 
         let mut account_metadata: Vec<AccountMetadata> = accounts

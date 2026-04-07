@@ -221,7 +221,7 @@ async fn run_stream(
 
                 if let Some(UpdateOneof::Transaction(txn)) = update.update_oneof {
                     if let Ok(Some(pump_tx)) = processor.process_transaction_update(txn) {
-                        if let Some(ix) = pump_tx.transaction.message.instructions.iter().chain(pump_tx.meta.inner_instructions.iter()).find(|ix| ix.name == "create") {
+                        if let Some(ix) = pump_tx.transaction.message.instructions.iter().chain(pump_tx.meta.inner_instructions.iter()).find(|ix| ix.name == "create" || ix.name == "createV2") {
                             let token = ix.accounts[0].pubkey.to_string();
                             let sig = pump_tx.transaction.signatures.first().unwrap().to_string();
                             let now = Utc::now();
