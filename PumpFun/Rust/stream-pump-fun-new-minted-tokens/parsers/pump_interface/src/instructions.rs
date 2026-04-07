@@ -23,6 +23,7 @@ pub enum PumpProgramIx {
     CloseUserVolumeAccumulator,
     CollectCreatorFee,
     Create(CreateIxArgs),
+    CreateV2(CreateV2IxArgs),
     ExtendAccount,
     InitUserVolumeAccumulator,
     Initialize,
@@ -52,6 +53,7 @@ impl PumpProgramIx {
             CLOSE_USER_VOLUME_ACCUMULATOR_IX_DISCM => Ok(Self::CloseUserVolumeAccumulator),
             COLLECT_CREATOR_FEE_IX_DISCM => Ok(Self::CollectCreatorFee),
             CREATE_IX_DISCM => Ok(Self::Create(CreateIxArgs::deserialize(&mut reader)?)),
+            CREATE_V2_IX_DISCM => Ok(Self::CreateV2(CreateV2IxArgs::deserialize(&mut reader)?)),
             EXTEND_ACCOUNT_IX_DISCM => Ok(Self::ExtendAccount),
             INIT_USER_VOLUME_ACCUMULATOR_IX_DISCM => Ok(Self::InitUserVolumeAccumulator),
             INITIALIZE_IX_DISCM => Ok(Self::Initialize),
@@ -95,6 +97,10 @@ impl PumpProgramIx {
             Self::CollectCreatorFee => writer.write_all(&COLLECT_CREATOR_FEE_IX_DISCM),
             Self::Create(args) => {
                 writer.write_all(&CREATE_IX_DISCM)?;
+                args.serialize(&mut writer)
+            }
+            Self::CreateV2(args) => {
+                writer.write_all(&CREATE_V2_IX_DISCM)?;
                 args.serialize(&mut writer)
             }
             Self::ExtendAccount => writer.write_all(&EXTEND_ACCOUNT_IX_DISCM),
@@ -2351,6 +2357,284 @@ pub fn create_ix_with_program_id(
 }
 pub fn create_ix(keys: CreateKeys, args: CreateIxArgs) -> std::io::Result<Instruction> {
     create_ix_with_program_id(crate::ID, keys, args)
+}
+
+pub const CREATE_V2_IX_ACCOUNTS_LEN: usize = 16;
+#[derive(Copy, Clone, Debug)]
+pub struct CreateV2Accounts<'me, 'info>{
+    pub mint : &'me AccountInfo<'info>,
+    pub mint_authority : &'me AccountInfo<'info>,
+    pub bonding_curve : &'me AccountInfo<'info>,
+    pub associated_bonding_curve: &'me AccountInfo<'info>,
+    pub global : &'me AccountInfo<'info>,
+    pub user:&'me AccountInfo<'info>,
+    pub system_program : &'me AccountInfo<'info>,
+    pub token_program : &'me AccountInfo<'info>,
+    pub associated_token_program: &'me AccountInfo<'info>,
+    pub mayhem_program_id: &'me AccountInfo<'info>,
+    pub global_params: &'me AccountInfo<'info>,
+    pub sol_vault: &'me AccountInfo<'info>,
+    pub mayhem_state: &'me AccountInfo<'info>,
+    pub mayhem_token_vault: &'me AccountInfo<'info>,
+    pub event_authority : &'me AccountInfo<'info>,
+    pub program : &'me AccountInfo<'info>,
+}
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct CreateV2Keys {
+    pub mint : Pubkey,
+    pub mint_authority: Pubkey,
+    pub bonding_curve : Pubkey,
+    pub associated_bonding_curve : Pubkey,
+    pub global : Pubkey,
+    pub user: Pubkey,
+    pub system_program: Pubkey,
+    pub token_program : Pubkey,
+    pub associated_token_program: Pubkey,
+    pub mayhem_program_id: Pubkey,
+    pub global_params: Pubkey,
+    pub sol_vault: Pubkey,
+    pub mayhem_state: Pubkey,
+    pub mayhem_token_vault: Pubkey,
+    pub event_authority: Pubkey,
+    pub program : Pubkey
+}
+impl From<CreateV2Accounts<'_, '_>> for CreateV2Keys {
+    fn from(accounts: CreateV2Accounts) -> Self {
+        Self {
+            mint: *accounts.mint.key,
+            mint_authority: *accounts.mint_authority.key,
+            bonding_curve: *accounts.bonding_curve.key,
+            associated_bonding_curve: *accounts.associated_bonding_curve.key,
+            global: *accounts.global.key,
+            user: *accounts.user.key,
+            system_program: *accounts.system_program.key,
+            token_program: *accounts.token_program.key,
+            associated_token_program: *accounts.associated_token_program.key,
+            mayhem_program_id: *accounts.mayhem_program_id.key,
+            global_params: *accounts.global_params.key,
+            sol_vault: *accounts.sol_vault.key,
+            mayhem_state: *accounts.mayhem_state.key,
+            mayhem_token_vault: *accounts.mayhem_token_vault.key,
+            event_authority: *accounts.event_authority.key,
+            program: *accounts.program.key,
+        }
+    }
+}
+impl From<CreateV2Keys> for [AccountMeta; CREATE_V2_IX_ACCOUNTS_LEN] {
+    fn from(keys: CreateV2Keys) -> Self {
+        [
+            AccountMeta {
+                pubkey: keys.mint,
+                is_signer: true,
+                is_writable: true,
+            },
+            AccountMeta {
+                pubkey: keys.mint_authority,
+                is_signer: false,
+                is_writable: false,
+            },
+            AccountMeta {
+                pubkey: keys.bonding_curve,
+                is_signer: false,
+                is_writable: true,
+            },
+            AccountMeta {
+                pubkey: keys.associated_bonding_curve,
+                is_signer: false,
+                is_writable: true,
+            },
+            AccountMeta {
+                pubkey: keys.global,
+                is_signer: false,
+                is_writable: false,
+            },
+            AccountMeta {
+                pubkey: keys.user,
+                is_signer: true,
+                is_writable: true,
+            },
+            AccountMeta {
+                pubkey: keys.system_program,
+                is_signer: false,
+                is_writable: false,
+            },
+            AccountMeta {
+                pubkey: keys.token_program,
+                is_signer: false,
+                is_writable: false,
+            },
+            AccountMeta {
+                pubkey: keys.associated_token_program,
+                is_signer: false,
+                is_writable: false,
+            },
+            AccountMeta {
+                pubkey: keys.mayhem_program_id,
+                is_signer: false,
+                is_writable: true,
+            },
+            AccountMeta {
+                pubkey: keys.global_params,
+                is_signer: false,
+                is_writable: false,
+            },
+            AccountMeta {
+                pubkey: keys.sol_vault,
+                is_signer: false,
+                is_writable: true,
+            },
+            AccountMeta {
+                pubkey: keys.mayhem_state,
+                is_signer: false,
+                is_writable: true,
+            },
+            AccountMeta {
+                pubkey: keys.mayhem_token_vault,
+                is_signer: false,
+                is_writable: true,
+            },
+            AccountMeta {
+                pubkey: keys.event_authority,
+                is_signer: false,
+                is_writable: false
+            },
+            AccountMeta {
+                 pubkey : keys.program ,
+                 is_signer : false ,
+                 is_writable : false
+            },
+        ]
+    }
+}
+impl From<[Pubkey; CREATE_V2_IX_ACCOUNTS_LEN]> for CreateV2Keys {
+    fn from(pubkeys: [Pubkey; CREATE_V2_IX_ACCOUNTS_LEN]) -> Self {
+        Self {
+            mint: pubkeys[0],
+            mint_authority: pubkeys[1],
+            bonding_curve: pubkeys[2],
+            associated_bonding_curve: pubkeys[3],
+            global: pubkeys[4],
+            user: pubkeys[5],
+            system_program: pubkeys[6],
+            token_program: pubkeys[7],
+            associated_token_program: pubkeys[8],
+            mayhem_program_id: pubkeys[9],
+            global_params: pubkeys[10],
+            sol_vault: pubkeys[11],
+            mayhem_state: pubkeys[12],
+            mayhem_token_vault: pubkeys[13],
+            event_authority: pubkeys[14],
+            program: pubkeys[15],
+        }
+    }
+}
+impl<'info> From<CreateV2Accounts<'_, 'info>> for [AccountInfo<'info>; CREATE_V2_IX_ACCOUNTS_LEN] {
+    fn from(accounts: CreateV2Accounts<'_, 'info>) -> Self {
+        [
+            accounts.mint.clone(),
+            accounts.mint_authority.clone(),
+            accounts.bonding_curve.clone(),
+            accounts.associated_bonding_curve.clone(),
+            accounts.global.clone(),
+            accounts.user.clone(),
+            accounts.system_program.clone(),
+            accounts.token_program.clone(),
+            accounts.associated_token_program.clone(),
+            accounts.mayhem_program_id.clone(),
+            accounts.global_params.clone(),
+            accounts.sol_vault.clone(),
+            accounts.mayhem_state.clone(),
+            accounts.mayhem_token_vault.clone(),
+            accounts.event_authority.clone(),
+            accounts.program.clone()
+        ]
+    }
+}
+
+impl<'me, 'info> From<&'me [AccountInfo<'info>; CREATE_V2_IX_ACCOUNTS_LEN]>
+for CreateV2Accounts<'me, 'info> {
+    fn from(arr: &'me [AccountInfo<'info>; CREATE_V2_IX_ACCOUNTS_LEN]) -> Self {
+        Self {
+            mint: &arr[0],
+            mint_authority: &arr[1],
+            bonding_curve: &arr[2],
+            associated_bonding_curve: &arr[3],
+            global: &arr[4],
+            user: &arr[5],
+            system_program: &arr[6],
+            token_program: &arr[7],
+            associated_token_program: &arr[8],
+            mayhem_program_id: &arr[9],
+            global_params: &arr[10],
+            sol_vault: &arr[11],
+            mayhem_state: &arr[12],
+            mayhem_token_vault : &arr[13],
+            event_authority : &arr[14],
+            program : &arr[15]
+        }
+    }
+}
+pub const CREATE_V2_IX_DISCM: [u8; 8] = [214,144,76,236,95,139,49,180];
+#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct CreateV2IxArgs {
+    pub name: String,
+    pub symbol: String,
+    pub uri: String,
+    pub creator: Pubkey,
+    pub is_mayhem_mode: bool,
+    pub is_cashback_enabled: Option<bool>
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct CreateV2IxData(pub CreateV2IxArgs);
+impl From<CreateV2IxArgs> for CreateV2IxData {
+    fn from(args: CreateV2IxArgs) -> Self {
+        Self(args)
+    }
+}
+impl CreateV2IxData {
+    pub fn deserialize(buf: &[u8]) -> std::io::Result<Self> {
+        let mut reader = buf;
+        let mut maybe_discm = [0u8; 8];
+        reader.read_exact(&mut maybe_discm)?;
+        if maybe_discm != CREATE_V2_IX_DISCM {
+            return Err(
+                std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!(
+                        "discm does not match. Expected: {:?}. Received: {:?}",
+                        CREATE_V2_IX_DISCM, maybe_discm
+                    ),
+                ),
+            );
+        }
+        Ok(Self(CreateV2IxArgs::deserialize(&mut reader)?))
+    }
+    pub fn serialize<W: std::io::Write>(&self, mut writer: W) -> std::io::Result<()> {
+        writer.write_all(&CREATE_V2_IX_DISCM)?;
+        self.0.serialize(&mut writer)
+    }
+    pub fn try_to_vec(&self) -> std::io::Result<Vec<u8>> {
+        let mut data = Vec::new();
+        self.serialize(&mut data)?;
+        Ok(data)
+    }
+}
+pub fn create_v2_ix_with_program_id(
+    program_id: Pubkey,
+    keys: CreateKeys,
+    args: CreateV2IxArgs,
+) -> std::io::Result<Instruction> {
+    let metas: [AccountMeta; CREATE_IX_ACCOUNTS_LEN] = keys.into();
+    let data: CreateV2IxData = args.into();
+    Ok(Instruction {
+        program_id,
+        accounts: Vec::from(metas),
+        data: data.try_to_vec()?,
+    })
+}
+pub fn create_v2_ix(keys: CreateKeys, args: CreateV2IxArgs) -> std::io::Result<Instruction> {
+    create_v2_ix_with_program_id(crate::ID, keys, args)
 }
 pub fn create_invoke_with_program_id(
     program_id: Pubkey,
